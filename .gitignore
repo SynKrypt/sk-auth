@@ -1,0 +1,16 @@
+# Dependencies
+node_modules
+yarn.lock
+package-lock.json
+
+# Prisma
+prisma
+prisma/
+prisma/seed.ts
+
+# Environment
+.env
+
+# TypeScript
+tsc
+dist/
