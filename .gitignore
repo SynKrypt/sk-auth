@@ -10,3 +10,6 @@ package-lock.json
 tsc
 dist/
 /src/generated/prisma
+
+# Task
+tasks.md
