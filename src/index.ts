@@ -1,9 +1,6 @@
 import express from "express";
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
-import { v4 as uuid } from "uuid";
-
-const prisma = new PrismaClient();
+import DBModule from "./modules/db/db.module.ts";
 
 const app = express();
 
@@ -13,18 +10,14 @@ app.listen(process.env.PORT, () => {
 });
 
 async function main() {
+  const db = new DBModule();
   console.log("Connected to database");
   try {
-    const newOrganization = await prisma.Organization.create({
-      data: {
-        id: uuid(),
-        name: "Test Organization",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
-    });
-    console.log(newOrganization);
-  } catch (error) {
+    const projectName = "Test project-3";
+    const orgId = "8e355a9f-85ac-4ef8-a685-fa37b203aa27";
+    const response = await db.createNewProject(orgId, projectName);
+    console.log(response);
+  } catch (error: any) {
     console.log(error);
   }
 }
