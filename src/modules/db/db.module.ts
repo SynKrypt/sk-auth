@@ -1,7 +1,7 @@
 import { UUID } from "crypto";
 import { IPostgresService, PostgresService } from "./db.service.ts";
 import { Project } from "@prisma/client";
-import { CustomError, ErrorType } from "../api-response/api-response.ts";
+import { CustomError, ErrorType } from "../response/api-response.ts";
 
 export interface IDBModule {
   getUserById(userId: UUID): Promise<any>;

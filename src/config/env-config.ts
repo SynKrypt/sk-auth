@@ -10,6 +10,9 @@ const envSchema = z.object({
   db: z.object({
     DB_URL: z.string().min(1),
   }),
+  jwt: z.object({
+    JWT_SECRET: z.string().min(1),
+  }),
 });
 
 const env = envSchema.safeParse(process.env);

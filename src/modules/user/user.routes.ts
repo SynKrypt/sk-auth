@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { registerWeb } from "./user.controller.ts";
+import userModule from "./user.module.ts";
 
 const router = Router();
 
 // SynKrypt Web
-router.post("/web/register", registerWeb);
+router.post("/web/register", userModule.registerWeb);
 router.post("/web/login", () => {});
 router.post("/web/logout", () => {});
 router.get("/web/account", () => {});

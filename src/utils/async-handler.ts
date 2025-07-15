@@ -1,8 +1,5 @@
-import {
-  CustomError,
-  ErrorType,
-} from "../modules/api-response/api-response.ts";
-import ApiResponse from "../modules/api-response/api-response.ts";
+import { CustomError, ErrorType } from "../modules/response/api-response.ts";
+import ApiResponse from "../modules/response/api-response.ts";
 
 const asyncHandler = (fn: (req: any, res: any) => Promise<void>) => {
   return async (req: any, res: any) => {

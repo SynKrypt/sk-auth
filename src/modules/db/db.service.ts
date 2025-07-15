@@ -1,10 +1,12 @@
 import { UUID } from "crypto";
 import { v4 as uuid } from "uuid";
 import { PrismaClient } from "@prisma/client";
-import { CustomError, ErrorType } from "../api-response/api-response.ts";
+import { CustomError, ErrorType } from "../response/api-response.ts";
+import ServiceResponse from "../response/service-response.ts";
 
 export interface IPostgresService {
   getUserById(userId: UUID): Promise<any>;
+  getUserByEmail(email: string): Promise<any>;
   updateUserToken(userId: UUID, token: string): Promise<any>;
   createNewProject(orgId: UUID, projectName: string): Promise<any>;
   getOrganizationById(orgId: UUID): Promise<any>;
@@ -21,6 +23,22 @@ export class PostgresService implements IPostgresService {
     return { userId };
   }
 
+  public async getUserByEmail(email: string): Promise<any> {
+    try {
+      const user = await this.prisma.userAccount.findUnique({
+        where: {
+          email,
+        },
+      });
+      if (!user) {
+        return ServiceResponse.failure("User not found");
+      }
+      return ServiceResponse.success(user);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
   public async updateUserToken(userId: UUID, token: string): Promise<any> {
     return { userId, token };
   }
@@ -33,20 +51,15 @@ export class PostgresService implements IPostgresService {
       const project = await this.prisma.project.create({
         data: {
           id: uuid(),
-          org_id: orgId,
+          orgId,
           name: projectName,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       });
-      return project;
+      return ServiceResponse.success(project);
     } catch (error) {
-      throw new CustomError(
-        ErrorType.database_error,
-        500,
-        "error in createNewProject",
-        error
-      );
+      return ServiceResponse.failure(error);
     }
   }
 
@@ -57,14 +70,60 @@ export class PostgresService implements IPostgresService {
           id: orgId,
         },
       });
-      return organization;
+      return ServiceResponse.success(organization);
     } catch (error) {
-      throw new CustomError(
-        ErrorType.database_error,
-        500,
-        "error in getOrganizationById",
-        error
-      );
+      return ServiceResponse.failure(error);
+    }
+  }
+
+  public async createUserByEmailAndPassword(
+    email: string,
+    hashedPassword: string,
+    orgId: UUID
+  ): Promise<any> {
+    try {
+      const user = await this.prisma.userAccount.create({
+        data: {
+          id: uuid(),
+          email,
+          password: hashedPassword,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          role: "admin",
+          orgId,
+        },
+      });
+      return ServiceResponse.success(user);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
+  public async createToken(
+    userId: UUID,
+    token: string,
+    orgId: UUID,
+    type: string,
+    expiresAt: Date
+  ): Promise<any> {
+    try {
+      const createdToken = await this.prisma.token.create({
+        data: {
+          id: uuid(),
+          userId,
+          token,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          orgId,
+          type,
+          fingerprint: null,
+          expiresAt,
+          isValid: true,
+        },
+      });
+      return ServiceResponse.success(createdToken);
+    } catch (error) {
+      return ServiceResponse.failure(error);
     }
   }
 }
