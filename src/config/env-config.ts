@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const envSchema = z.object({
+export const envSchema = z.object({
   app: z.object({
     NODE_ENV: z
       .enum(["development", "test", "production"])
@@ -15,11 +15,34 @@ const envSchema = z.object({
   }),
 });
 
-const env = envSchema.safeParse(process.env);
+export const envConfig = {
+  app: {
+    NODE_ENV: process.env.NODE_ENV || "development",
+    PORT: Number(process.env.PORT) || 3000,
+  },
+  db: {
+    DB_URL: process.env.DB_URL || "",
+  },
+  jwt: {
+    JWT_SECRET: process.env.JWT_SECRET || "",
+  },
+};
 
-if (!env.success) {
-  console.error("invalid environment variables");
-  process.exit(1);
+let config: z.infer<typeof envSchema>;
+
+export function configureEnvironment(): z.infer<typeof envSchema> {
+  if (config) return config;
+
+  console.log("configuring environment variables...");
+  const env = envSchema.safeParse(envConfig);
+  if (!env.success) {
+    console.log("invalid environment variables", env.error);
+    process.exit(1);
+  } else {
+    console.log("environment variables configured successfully");
+    config = env.data;
+    return env.data;
+  }
 }
 
-export const config = env.data;
+export default configureEnvironment();

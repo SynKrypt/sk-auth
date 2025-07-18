@@ -1,7 +1,6 @@
 import { UUID } from "crypto";
 import { v4 as uuid } from "uuid";
 import { PrismaClient } from "@prisma/client";
-import { CustomError, ErrorType } from "../response/api-response.ts";
 import ServiceResponse from "../response/service-response.ts";
 
 export interface IPostgresService {

@@ -1,7 +1,7 @@
 import { UUID } from "crypto";
 import { PostgresService } from "../db/db.service.ts";
 import bcrypt from "bcrypt";
-import { config } from "@/config/env-config.ts";
+import config from "@/config/env-config.ts";
 import jwt from "jsonwebtoken";
 import ServiceResponse from "../response/service-response.ts";
 
