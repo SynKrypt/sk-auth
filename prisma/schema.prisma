@@ -32,12 +32,12 @@ model UserAccount {
   id String @id @default(uuid()) @db.Uuid
   email String @unique
   password String
-  orgId String @db.Uuid
+  orgId String? @db.Uuid
   role String
   createdAt DateTime @default(now()) @db.Timestamp
   updatedAt DateTime @default(now()) @db.Timestamp
 
-  organization Organization @relation(fields: [orgId], references: [id])
+  organization Organization? @relation(fields: [orgId], references: [id])
   tokens Token[]
 }
 
@@ -45,7 +45,7 @@ model Token {
   id String @id @default(uuid()) @db.Uuid
   userId String @db.Uuid
   token String
-  orgId String @db.Uuid
+  orgId String? @db.Uuid
   type String
   fingerprint String?
   isValid Boolean @default(true)
@@ -54,5 +54,5 @@ model Token {
   updatedAt DateTime @default(now()) @db.Timestamp
 
   user UserAccount @relation(fields: [userId], references: [id])
-  organization Organization @relation(fields: [orgId], references: [id])
+  organization Organization? @relation(fields: [orgId], references: [id])
 }

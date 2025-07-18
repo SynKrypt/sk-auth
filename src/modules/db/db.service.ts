@@ -77,8 +77,7 @@ export class PostgresService implements IPostgresService {
 
   public async createUserByEmailAndPassword(
     email: string,
-    hashedPassword: string,
-    orgId: UUID
+    hashedPassword: string
   ): Promise<any> {
     try {
       const user = await this.prisma.userAccount.create({
@@ -89,7 +88,6 @@ export class PostgresService implements IPostgresService {
           createdAt: new Date(),
           updatedAt: new Date(),
           role: "admin",
-          orgId,
         },
       });
       return ServiceResponse.success(user);
@@ -101,7 +99,6 @@ export class PostgresService implements IPostgresService {
   public async createToken(
     userId: UUID,
     token: string,
-    orgId: UUID,
     type: string,
     expiresAt: Date
   ): Promise<any> {
@@ -113,7 +110,6 @@ export class PostgresService implements IPostgresService {
           token,
           createdAt: new Date(),
           updatedAt: new Date(),
-          orgId,
           type,
           fingerprint: null,
           expiresAt,

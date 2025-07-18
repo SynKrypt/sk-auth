@@ -5,11 +5,7 @@ import ApiResponse, {
   CustomError,
   ErrorType,
 } from "../response/api-response.ts";
-import {
-  email_schema,
-  organizationId_schema,
-  password_schema,
-} from "./user.validation.ts";
+import { email_schema, password_schema } from "./user.validation.ts";
 import { PostgresService } from "../db/db.service.ts";
 
 export type ICookieType = {
@@ -42,14 +38,14 @@ class UserModule implements IUserModule {
     if (!req.body) {
       throw new CustomError(ErrorType.not_found, 400, "request body missing");
     }
-    const { email, password, organizationId } = req.body;
+    const { email, password } = req.body;
 
     // Validations
-    if (!email || !password || !organizationId) {
+    if (!email || !password) {
       throw new CustomError(
         ErrorType.not_found,
         400,
-        "email, password and organizationId are required"
+        "email and password are required"
       );
     }
     const validationErrors = [];
@@ -57,13 +53,9 @@ class UserModule implements IUserModule {
     const emailValidationResult = email_schema.safeParse(email);
     // Password validation
     const passwordValidationResult = password_schema.safeParse(password);
-    // Organization-ID validation
-    const organizationIdValidationResult =
-      organizationId_schema.safeParse(organizationId);
     for (const validationResult of [
       emailValidationResult,
       passwordValidationResult,
-      organizationIdValidationResult,
     ]) {
       if (!validationResult.success) {
         validationErrors.push(validationResult.error);
@@ -78,17 +70,6 @@ class UserModule implements IUserModule {
       );
     }
 
-    // Check if organization exists
-    const organizationFromDB =
-      await this.dbService.getOrganizationById(organizationId);
-    if (!organizationFromDB.success) {
-      throw new CustomError(
-        ErrorType.database_error,
-        404,
-        "organization not found"
-      );
-    }
-
     // Check if user already exists
     const userFromDB = await this.userService.findUserByEmail(email);
     if (userFromDB.success) {
@@ -100,16 +81,12 @@ class UserModule implements IUserModule {
     }
 
     // Create new user account
-    const createdUser = await this.userService.createNewUser(
-      email,
-      password,
-      organizationId
-    );
+    const createdUser = await this.userService.createNewAdmin(email, password);
     if (!createdUser.success) {
       throw new CustomError(
         ErrorType.database_error,
         503,
-        "user creation failed",
+        "admin creation failed",
         createdUser.errors
       );
     }
@@ -119,7 +96,7 @@ class UserModule implements IUserModule {
       .cookie("access_token", createdUser.data.token, cookieOptions)
       .status(201)
       .json(
-        ApiResponse.success(201, "user created successfully", createdUser.data)
+        ApiResponse.success(201, "admin created successfully", createdUser.data)
       );
   });
 }

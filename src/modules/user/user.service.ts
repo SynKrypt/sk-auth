@@ -1,4 +1,3 @@
-import { UUID } from "crypto";
 import { PostgresService } from "../db/db.service.ts";
 import bcrypt from "bcrypt";
 import config from "@/config/env-config.ts";
@@ -7,7 +6,7 @@ import ServiceResponse from "../response/service-response.ts";
 
 export interface IUserService {
   findUserByEmail(email: string): Promise<any>;
-  createNewUser(email: string, password: string, projectId: UUID): Promise<any>;
+  createNewAdmin(email: string, password: string): Promise<any>;
 }
 
 export class UserService implements IUserService {
@@ -29,11 +28,7 @@ export class UserService implements IUserService {
     }
   }
 
-  public async createNewUser(
-    email: string,
-    password: string,
-    projectId: UUID
-  ): Promise<any> {
+  public async createNewAdmin(email: string, password: string): Promise<any> {
     try {
       // Hash the password
       const hashedPassword = await bcrypt.hash(password, 10);
@@ -41,8 +36,7 @@ export class UserService implements IUserService {
       // Create a new user
       const user = await this.dbService.createUserByEmailAndPassword(
         email,
-        hashedPassword,
-        projectId
+        hashedPassword
       );
       if (!user.success) {
         return ServiceResponse.failure(user.error);
@@ -58,7 +52,6 @@ export class UserService implements IUserService {
       const tokenResponse = await this.dbService.createToken(
         user.data.id,
         accessToken,
-        projectId,
         "web-session",
         new Date(Date.now() + 1000 * 60 * 60 * 24)
       );
