@@ -28,6 +28,7 @@ export enum ErrorType {
   validation_error = "validation_error",
   unknown_error = "unknown_error",
   database_error = "database_error",
+  not_found = "not_found",
 }
 
 export class CustomError extends Error {

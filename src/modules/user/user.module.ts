@@ -12,6 +12,19 @@ import {
 } from "./user.validation.ts";
 import { PostgresService } from "../db/db.service.ts";
 
+export type ICookieType = {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: "strict" | "lax" | "none";
+  maxAge: number;
+};
+const cookieOptions: ICookieType = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "strict",
+  maxAge: 60 * 60 * 24,
+};
+
 export interface IUserModule {
   registerWeb(req: Request, res: Response): Promise<any>;
 }
@@ -26,12 +39,15 @@ class UserModule implements IUserModule {
   }
 
   public registerWeb = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.body) {
+      throw new CustomError(ErrorType.not_found, 400, "request body missing");
+    }
     const { email, password, organizationId } = req.body;
 
     // Validations
     if (!email || !password || !organizationId) {
       throw new CustomError(
-        ErrorType.validation_error,
+        ErrorType.not_found,
         400,
         "email, password and organizationId are required"
       );
@@ -100,7 +116,7 @@ class UserModule implements IUserModule {
 
     // Set cookie and send response
     res
-      .cookie("access_token", createdUser.data.token)
+      .cookie("access_token", createdUser.data.token, cookieOptions)
       .status(201)
       .json(
         ApiResponse.success(201, "user created successfully", createdUser.data)
