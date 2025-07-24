@@ -29,6 +29,11 @@ export enum ErrorType {
   unknown_error = "unknown_error",
   database_error = "database_error",
   not_found = "not_found",
+  unauthorized = "unauthorized",
+  forbidden = "forbidden",
+  invalid_token = "invalid_token",
+  token_expired = "token_expired",
+  internal_server_error = "internal_server_error",
 }
 
 export class CustomError extends Error {

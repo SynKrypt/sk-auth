@@ -1,14 +1,16 @@
 import { Router } from "express";
-import userModule from "./user.module.ts";
+import UserModule from "./user.module.ts";
+import { authenticate } from "@/middlewares/auth.middleware.ts";
 
 const router = Router();
+const userModule = new UserModule();
 
 // SynKrypt Web
 router.post("/web/register", userModule.registerWeb);
-router.post("/web/login", () => {});
-router.post("/web/logout", () => {});
-router.get("/web/account", () => {});
-router.delete("/web/account", () => {});
+router.post("/web/login", userModule.loginWeb);
+router.post("/web/logout", authenticate, userModule.logoutWeb);
+router.get("/web/account", authenticate, userModule.getAccount);
+router.delete("/web/account", authenticate, userModule.deleteAccount);
 
 // SynKrypt CLI
 router.post("/cli/login", () => {});

@@ -15,3 +15,10 @@ export const password_schema = z
 export const organizationId_schema = z
   .string()
   .uuid("invalid organization id. organization-ID must be of UUID type");
+
+export const loginSchema = z.object({
+  email: email_schema,
+  password: z.string().min(1, "Password is required"),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;

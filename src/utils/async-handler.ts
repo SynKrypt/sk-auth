@@ -1,10 +1,12 @@
 import { CustomError, ErrorType } from "../modules/response/api-response.ts";
 import ApiResponse from "../modules/response/api-response.ts";
 
-const asyncHandler = (fn: (req: any, res: any) => Promise<void>) => {
-  return async (req: any, res: any) => {
+const asyncHandler = (
+  fn: (req: any, res: any, next?: any) => Promise<void>
+) => {
+  return async (req: any, res: any, next?: any) => {
     try {
-      await fn(req, res);
+      await fn(req, res, next);
     } catch (error) {
       if (error instanceof CustomError) {
         return res

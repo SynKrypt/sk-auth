@@ -9,17 +9,30 @@ export interface IPostgresService {
   updateUserToken(userId: UUID, token: string): Promise<any>;
   createNewProject(orgId: UUID, projectName: string): Promise<any>;
   getOrganizationById(orgId: UUID): Promise<any>;
+  getTokenByValue(token: string): Promise<any>;
+  deleteUserTokensByType(userId: UUID, tokenType: string): Promise<any>;
+  deleteUserById(userId: UUID): Promise<any>;
 }
 
 export class PostgresService implements IPostgresService {
-  private readonly prisma: PrismaClient;
+  public readonly prisma: PrismaClient;
 
   constructor() {
     this.prisma = new PrismaClient();
   }
 
   public async getUserById(userId: UUID): Promise<any> {
-    return { userId };
+    try {
+      const user = await this.prisma.userAccount.findUnique({
+        where: { id: userId },
+      });
+      if (!user) {
+        return ServiceResponse.failure("User not found");
+      }
+      return ServiceResponse.success(user);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
   }
 
   public async getUserByEmail(email: string): Promise<any> {
@@ -38,8 +51,68 @@ export class PostgresService implements IPostgresService {
     }
   }
 
+  public async deleteUserById(userId: UUID): Promise<any> {
+    try {
+      const result = await this.prisma.userAccount.delete({
+        where: {
+          id: userId,
+        },
+      });
+      return ServiceResponse.success(result);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
   public async updateUserToken(userId: UUID, token: string): Promise<any> {
     return { userId, token };
+  }
+
+  public async getTokenByValue(token: string): Promise<any> {
+    try {
+      const tokenRecord = await this.prisma.token.findFirst({
+        where: {
+          token: token,
+        },
+      });
+
+      if (!tokenRecord) {
+        return ServiceResponse.failure("Token not found");
+      }
+      return ServiceResponse.success(tokenRecord);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
+  public async deleteUserTokensByType(
+    userId: UUID,
+    tokenType: string
+  ): Promise<any> {
+    try {
+      const result = await this.prisma.token.deleteMany({
+        where: {
+          userId: userId,
+          type: tokenType,
+        },
+      });
+      return ServiceResponse.success(result);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
+  public async deleteAllUserTokens(userId: UUID): Promise<any> {
+    try {
+      const result = await this.prisma.token.deleteMany({
+        where: {
+          userId: userId,
+        },
+      });
+      return ServiceResponse.success(result);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
   }
 
   public async createNewProject(

@@ -12,6 +12,7 @@ export const envSchema = z.object({
   }),
   jwt: z.object({
     JWT_SECRET: z.string().min(1),
+    JWT_EXPIRES_IN: z.number().default(86400), // 24 hours in seconds
   }),
 });
 
@@ -25,6 +26,7 @@ export const envConfig = {
   },
   jwt: {
     JWT_SECRET: process.env.JWT_SECRET || "",
+    JWT_EXPIRES_IN: Number(process.env.JWT_EXPIRES_IN) || 86400,
   },
 };
 

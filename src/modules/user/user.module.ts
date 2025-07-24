@@ -5,7 +5,15 @@ import ApiResponse, {
   CustomError,
   ErrorType,
 } from "../response/api-response.ts";
-import { email_schema, password_schema } from "./user.validation.ts";
+import {
+  loginSchema,
+  LoginInput,
+  email_schema,
+  password_schema,
+} from "./user.validation.ts";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import config from "@/config/env-config.ts";
 import { PostgresService } from "../db/db.service.ts";
 
 export type ICookieType = {
@@ -99,6 +107,137 @@ class UserModule implements IUserModule {
         ApiResponse.success(201, "admin created successfully", createdUser.data)
       );
   });
+
+  public loginWeb = asyncHandler(async (req: Request, res: Response) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      throw new CustomError(
+        ErrorType.not_found,
+        400,
+        "email and password are required"
+      );
+    }
+    // Validate request body
+    const validationResult = loginSchema.safeParse({ email, password });
+    if (!validationResult.success) {
+      throw new CustomError(
+        ErrorType.validation_error,
+        400,
+        "invalid email or password",
+        validationResult.error.errors
+      );
+    }
+
+    // Find user by email
+    const userResponse = await this.userService.findUserByEmail(email);
+    if (!userResponse.success || !userResponse.data) {
+      throw new CustomError(
+        ErrorType.unauthorized,
+        401,
+        "user not found",
+        userResponse.error
+      );
+    }
+
+    const userLoginResponse = await this.userService.loginUser(
+      email,
+      password,
+      userResponse.data
+    );
+    if (!userLoginResponse.success) {
+      throw new CustomError(
+        ErrorType.unauthorized,
+        401,
+        "login failed",
+        userLoginResponse.error
+      );
+    }
+
+    // Set HTTP-only cookie
+    res.cookie("access_token", userLoginResponse.data.token, cookieOptions);
+
+    // Return success response (without sensitive data)
+    const { password: _, ...userWithoutPassword } = userLoginResponse.data.user;
+    res.status(200).json(
+      ApiResponse.success(200, "Login successful", {
+        user: userWithoutPassword,
+      })
+    );
+  });
+
+  public logoutWeb = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new CustomError(
+        ErrorType.unauthorized,
+        401,
+        "unauthenticated request"
+      );
+    }
+
+    const logoutResponse = await this.userService.logoutUser(req.user.id);
+    if (!logoutResponse.success) {
+      throw new CustomError(
+        ErrorType.internal_server_error,
+        500,
+        "logout failed",
+        logoutResponse.error
+      );
+    }
+
+    res.clearCookie("access_token");
+    res.status(200).json(ApiResponse.success(200, "Logout successful", null));
+  });
+
+  public getAccount = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new CustomError(
+        ErrorType.unauthorized,
+        401,
+        "unauthenticated request"
+      );
+    }
+
+    const userResponse = await this.userService.findUserById(req.user.id);
+    if (!userResponse.success || !userResponse.data) {
+      throw new CustomError(
+        ErrorType.unauthorized,
+        401,
+        "user not found",
+        userResponse.error
+      );
+    }
+
+    const { password: _, ...userWithoutPassword } = userResponse.data;
+    res.status(200).json(
+      ApiResponse.success(200, "User found", {
+        user: userWithoutPassword,
+      })
+    );
+  });
+
+  public deleteAccount = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new CustomError(
+        ErrorType.unauthorized,
+        401,
+        "unauthenticated request"
+      );
+    }
+
+    const deleteResponse = await this.userService.deleteUser(req.user.id);
+    if (!deleteResponse.success) {
+      throw new CustomError(
+        ErrorType.internal_server_error,
+        500,
+        "delete failed",
+        deleteResponse.error
+      );
+    }
+
+    res
+      .status(200)
+      .json(ApiResponse.success(200, "User deleted successfully", null));
+  });
 }
 
-export default new UserModule();
+export default UserModule;
