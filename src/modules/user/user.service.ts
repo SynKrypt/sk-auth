@@ -141,8 +141,8 @@ export class UserService implements IUserService {
         // delete all tokens of the user
         /*
           NOTE
-          - user cannot be deleted before its tokens because of the schema design
-          - each token entry must have a valid userId
+          - user cannot be deleted before its tokens are deleted 
+          - because of the schema design, each token entry must have a valid userId
           - so token must be deleted first
         */
         await txn.token.deleteMany({

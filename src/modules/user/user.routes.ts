@@ -11,6 +11,11 @@ router.post("/web/login", userModule.loginWeb);
 router.post("/web/logout", authenticate, userModule.logoutWeb);
 router.get("/web/account", authenticate, userModule.getAccount);
 router.delete("/web/account", authenticate, userModule.deleteAccount);
+// router.post("/web/user", authenticate, userModule.createNewUser)
+// router.delete("/web/user/:userId", authenticate, userModule.deleteUser)
+// router.get("/web/user", authenticate, userModule.getUsers)
+// router.get("/web/user/:userId", authenticate, userModule.getUser)
+// router.put("/web/user/:userId", authenticate, userModule.updateUser)
 
 // SynKrypt CLI
 router.post("/cli/login", () => {});

@@ -7,13 +7,9 @@ import ApiResponse, {
 } from "../response/api-response.ts";
 import {
   loginSchema,
-  LoginInput,
   email_schema,
   password_schema,
 } from "./user.validation.ts";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import config from "@/config/env-config.ts";
 import { PostgresService } from "../db/db.service.ts";
 
 export type ICookieType = {
