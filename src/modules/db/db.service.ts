@@ -7,9 +7,12 @@ export interface IPostgresService {
   getUserById(userId: UUID): Promise<any>;
   getUserByEmail(email: string): Promise<any>;
   updateUserToken(userId: UUID, token: string): Promise<any>;
-  createNewProject(orgId: UUID, projectName: string): Promise<any>;
+  createProject(orgId: UUID, projectName: string): Promise<any>;
   getOrganizationById(orgId: UUID): Promise<any>;
+  createOrganization(orgName: string): Promise<any>;
   getTokenByValue(token: string): Promise<any>;
+  deleteProjectById(projectId: UUID): Promise<any>;
+  deleteOrganizationById(orgId: UUID): Promise<any>;
   deleteUserTokensByType(userId: UUID, tokenType: string): Promise<any>;
   deleteUserById(userId: UUID): Promise<any>;
 }
@@ -115,10 +118,7 @@ export class PostgresService implements IPostgresService {
     }
   }
 
-  public async createNewProject(
-    orgId: UUID,
-    projectName: string
-  ): Promise<any> {
+  public async createProject(orgId: UUID, projectName: string): Promise<any> {
     try {
       const project = await this.prisma.project.create({
         data: {
@@ -135,6 +135,35 @@ export class PostgresService implements IPostgresService {
     }
   }
 
+  public async deleteProjectById(projectId: UUID): Promise<any> {
+    try {
+      const result = await this.prisma.project.delete({
+        where: {
+          id: projectId,
+        },
+      });
+      return ServiceResponse.success(result);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
+  public async createOrganization(orgName: string): Promise<any> {
+    try {
+      const organization = await this.prisma.organization.create({
+        data: {
+          id: uuid(),
+          name: orgName,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+      return ServiceResponse.success(organization);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
   public async getOrganizationById(orgId: UUID): Promise<any> {
     try {
       const organization = await this.prisma.organization.findUnique({
@@ -143,6 +172,19 @@ export class PostgresService implements IPostgresService {
         },
       });
       return ServiceResponse.success(organization);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
+  public async deleteOrganizationById(orgId: UUID): Promise<any> {
+    try {
+      const result = await this.prisma.organization.delete({
+        where: {
+          id: orgId,
+        },
+      });
+      return ServiceResponse.success(result);
     } catch (error) {
       return ServiceResponse.failure(error);
     }
