@@ -15,6 +15,7 @@ export interface IPostgresService {
   deleteOrganizationById(orgId: UUID): Promise<any>;
   deleteUserTokensByType(userId: UUID, tokenType: string): Promise<any>;
   deleteUserById(userId: UUID): Promise<any>;
+  deleteTokenByID(tokenId: UUID): Promise<any>;
 }
 
 export class PostgresService implements IPostgresService {
@@ -97,6 +98,19 @@ export class PostgresService implements IPostgresService {
         where: {
           userId: userId,
           type: tokenType,
+        },
+      });
+      return ServiceResponse.success(result);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
+  public async deleteTokenByID(tokenId: UUID): Promise<any> {
+    try {
+      const result = await this.prisma.token.delete({
+        where: {
+          id: tokenId,
         },
       });
       return ServiceResponse.success(result);
