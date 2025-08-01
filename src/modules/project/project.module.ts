@@ -92,6 +92,19 @@ class ProjectModule implements IProjectModule {
           validationResult.error.errors
         );
       }
+
+      // check if the organization exists
+      const organizationExists =
+        await this.projectService.getOrganizationById(orgId);
+      if (!organizationExists.success) {
+        throw new CustomError(
+          ErrorType.validation_error,
+          400,
+          "organization does not exist"
+        );
+      }
+
+      // delete the organization from DB
       const result = await this.projectService.deleteOrganization(orgId);
       if (!result.success) {
         throw new CustomError(
@@ -101,6 +114,7 @@ class ProjectModule implements IProjectModule {
           result.error
         );
       }
+
       res
         .status(200)
         .json(
@@ -179,6 +193,18 @@ class ProjectModule implements IProjectModule {
         validationResult.error.errors
       );
     }
+
+    // check if the project exists
+    const projectExists = await this.projectService.getProjectById(projectId);
+    if (!projectExists.success) {
+      throw new CustomError(
+        ErrorType.validation_error,
+        400,
+        "project does not exist"
+      );
+    }
+
+    // delete the project from DB
     const result = await this.projectService.deleteProject(projectId);
     if (!result.success) {
       throw new CustomError(
@@ -188,6 +214,7 @@ class ProjectModule implements IProjectModule {
         result.error
       );
     }
+
     res
       .status(200)
       .json(

@@ -49,13 +49,29 @@ class ProjectService implements IProjectService {
     }
   };
 
+  public getProjectById = async (projectId: UUID) => {
+    try {
+      const result = await this.dbService.prisma.project.findUnique({
+        where: {
+          id: projectId,
+        },
+      });
+      if (!result) {
+        return ServiceResponse.failure("project not found");
+      }
+      return ServiceResponse.success(result);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  };
+
   public deleteProject = async (projectId: UUID) => {
     try {
       const result = await this.dbService.deleteProjectById(projectId);
       if (!result.success) {
         return ServiceResponse.failure(result.error);
       }
-      return ServiceResponse.success(result.data);
+      return ServiceResponse.success(null);
     } catch (error) {
       return ServiceResponse.failure(error);
     }
@@ -110,24 +126,44 @@ class ProjectService implements IProjectService {
     }
   };
 
+  public getOrganizationById = async (orgId: UUID) => {
+    try {
+      const result = await this.dbService.prisma.organization.findUnique({
+        where: {
+          id: orgId,
+        },
+      });
+      if (!result) {
+        return ServiceResponse.failure("organization not found");
+      }
+      return ServiceResponse.success(result);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  };
+
   public deleteOrganization = async (orgId: UUID) => {
     try {
       const result = await this.dbService.prisma.$transaction(async (txn) => {
+        // delete organization
         await txn.organization.delete({
           where: {
             id: orgId,
           },
         });
+        // delete all the projects associated with the organization
         await txn.project.deleteMany({
           where: {
             orgId: orgId,
           },
         });
+        // delete all the tokens associated with the organization
         await txn.token.deleteMany({
           where: {
             orgId: orgId,
           },
         });
+        // delete all the user accounts associated with the organization
         await txn.userAccount.deleteMany({
           where: {
             orgId: orgId,
