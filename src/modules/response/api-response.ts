@@ -27,6 +27,7 @@ export default class ApiResponse {
 export enum ErrorType {
   validation_error = "validation_error",
   unknown_error = "unknown_error",
+  already_exists = "already_exists",
   database_error = "database_error",
   not_found = "not_found",
   unauthorized = "unauthorized",

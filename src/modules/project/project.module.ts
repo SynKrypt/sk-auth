@@ -39,7 +39,23 @@ class ProjectModule implements IProjectModule {
           validationResult.error.errors
         );
       }
-      const result = await this.projectService.createOrganization(orgName);
+
+      // check if organization already exists
+      const organizationExists =
+        await this.projectService.getOrganizationByName(orgName);
+      if (organizationExists.success) {
+        throw new CustomError(
+          ErrorType.already_exists,
+          400,
+          "organization already exists"
+        );
+      }
+
+      // create a new organization and update it in the user's entry in DB
+      const result = await this.projectService.createOrganization(
+        orgName,
+        req.user.id
+      );
       if (!result.success) {
         throw new CustomError(
           ErrorType.database_error,
@@ -48,6 +64,7 @@ class ProjectModule implements IProjectModule {
           result.error
         );
       }
+
       res
         .status(201)
         .json(
@@ -112,6 +129,21 @@ class ProjectModule implements IProjectModule {
           validationResult.error.errors
         );
       }
+
+      // check if a project already exists with the same name
+      const projectExists = await this.projectService.getProjectByName(
+        orgId,
+        projectName
+      );
+      if (projectExists.success) {
+        throw new CustomError(
+          ErrorType.validation_error,
+          400,
+          "project already exists"
+        );
+      }
+
+      // create a new project
       const result = await this.projectService.createProject(
         orgId,
         projectName
@@ -124,6 +156,7 @@ class ProjectModule implements IProjectModule {
           result.error
         );
       }
+
       res
         .status(201)
         .json(

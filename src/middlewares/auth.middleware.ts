@@ -84,7 +84,6 @@ export const authenticate = asyncHandler(
         throw new CustomError(ErrorType.not_found, 404, "User not found");
       }
       req.user = userResponse.data;
-
       next();
     } catch (error) {
       throw error;

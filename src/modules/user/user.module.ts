@@ -11,6 +11,7 @@ import {
   password_schema,
 } from "./user.validation.ts";
 import { PostgresService } from "../db/db.service.ts";
+import envConfig from "@/config/env-config.ts";
 
 export type ICookieType = {
   httpOnly: boolean;
@@ -20,9 +21,9 @@ export type ICookieType = {
 };
 const cookieOptions: ICookieType = {
   httpOnly: true,
-  secure: true,
+  secure: envConfig.app.NODE_ENV === "production",
   sameSite: "strict",
-  maxAge: 60 * 60 * 24,
+  maxAge: 60 * 60 * 24 * 1000, // 1 day
 };
 
 export interface IUserModule {

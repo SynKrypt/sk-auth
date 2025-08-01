@@ -1,11 +1,15 @@
 import { PostgresService } from "../db/db.service.ts";
 import ServiceResponse from "../response/service-response.ts";
 import { UUID } from "crypto";
+import { v4 as uuid } from "uuid";
 
 interface IProjectService {
   createProject: (orgId: UUID, projectName: string) => Promise<ServiceResponse>;
   deleteProject: (projectId: UUID) => Promise<ServiceResponse>;
-  createOrganization: (orgName: string) => Promise<ServiceResponse>;
+  createOrganization: (
+    orgName: string,
+    userId: UUID
+  ) => Promise<ServiceResponse>;
   deleteOrganization: (orgId: UUID) => Promise<ServiceResponse>;
 }
 
@@ -28,6 +32,23 @@ class ProjectService implements IProjectService {
     }
   };
 
+  public getProjectByName = async (orgId: UUID, projectName: string) => {
+    try {
+      const result = await this.dbService.prisma.project.findUnique({
+        where: {
+          orgId,
+          name: projectName,
+        },
+      });
+      if (!result) {
+        return ServiceResponse.failure("project not found");
+      }
+      return ServiceResponse.success(result);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  };
+
   public deleteProject = async (projectId: UUID) => {
     try {
       const result = await this.dbService.deleteProjectById(projectId);
@@ -40,13 +61,50 @@ class ProjectService implements IProjectService {
     }
   };
 
-  public createOrganization = async (orgName: string) => {
+  public createOrganization = async (orgName: string, userId: UUID) => {
     try {
-      const result = await this.dbService.createOrganization(orgName);
+      const result = await this.dbService.prisma.$transaction(async (txn) => {
+        const orgId = uuid();
+        // create new organization
+        await txn.organization.create({
+          data: {
+            id: orgId,
+            name: orgName,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+        // update user account with created orgId
+        await txn.userAccount.update({
+          where: {
+            id: userId,
+          },
+          data: {
+            orgId: orgId,
+          },
+        });
+        return ServiceResponse.success({ org_id: orgId, org_name: orgName });
+      });
       if (!result.success) {
         return ServiceResponse.failure(result.error);
       }
       return ServiceResponse.success(result.data);
+    } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  };
+
+  public getOrganizationByName = async (orgName: string) => {
+    try {
+      const result = await this.dbService.prisma.organization.findUnique({
+        where: {
+          name: orgName,
+        },
+      });
+      if (!result) {
+        return ServiceResponse.failure("organization not found");
+      }
+      return ServiceResponse.success(result);
     } catch (error) {
       return ServiceResponse.failure(error);
     }
