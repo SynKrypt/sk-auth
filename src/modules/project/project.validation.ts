@@ -2,19 +2,19 @@ import z from "zod";
 
 export const project_name_schema = z
   .string()
-  .min(3, "Project name must be at least 3 characters long")
-  .max(100, "Project name must be at most 100 characters long")
+  .min(3, "project name must be at least 3 characters long")
+  .max(100, "project name must be at most 100 characters long")
   .regex(
     /^[A-Za-z][A-Za-z0-9_\-\s]+$/,
-    "Project name must start with a letter, can contain letters, numbers, underscore (_), dash (-) and whitespace."
+    "project name must start with a letter, can contain letters, numbers, underscore (_), dash (-) and whitespace."
   );
 export const organization_name_schema = z
   .string()
-  .min(3, "Organization name must be at least 3 characters long")
-  .max(100, "Organization name must be at most 100 characters long")
+  .min(3, "organization name must be at least 3 characters long")
+  .max(100, "organization name must be at most 100 characters long")
   .regex(
     /^[A-Za-z][A-Za-z0-9_\-\s]+$/,
-    "Organization name must start with a letter, can contain letters, numbers, underscore (_), dash (-) and whitespace."
+    "organization name must start with a letter, can contain letters, numbers, underscore (_), dash (-) and whitespace."
   );
 
 export const project_creation_schema = z.object({

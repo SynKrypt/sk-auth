@@ -151,7 +151,7 @@ export class UserService implements IUserService {
           },
         });
         // delete the user
-        await txn.userAccount.delete({
+        await txn.user_account.delete({
           where: {
             id: userId,
           },

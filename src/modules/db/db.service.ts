@@ -7,7 +7,7 @@ export interface IPostgresService {
   getUserById(userId: UUID): Promise<any>;
   getUserByEmail(email: string): Promise<any>;
   updateUserToken(userId: UUID, token: string): Promise<any>;
-  createProject(orgId: UUID, projectName: string): Promise<any>;
+  createProject(orgId: UUID, projectName: string, userId: UUID): Promise<any>;
   getOrganizationById(orgId: UUID): Promise<any>;
   createOrganization(orgName: string): Promise<any>;
   getTokenByValue(token: string): Promise<any>;
@@ -27,7 +27,7 @@ export class PostgresService implements IPostgresService {
 
   public async getUserById(userId: UUID): Promise<any> {
     try {
-      const user = await this.prisma.userAccount.findUnique({
+      const user = await this.prisma.user_account.findUnique({
         where: { id: userId },
       });
       if (!user) {
@@ -41,7 +41,7 @@ export class PostgresService implements IPostgresService {
 
   public async getUserByEmail(email: string): Promise<any> {
     try {
-      const user = await this.prisma.userAccount.findUnique({
+      const user = await this.prisma.user_account.findUnique({
         where: {
           email,
         },
@@ -57,7 +57,7 @@ export class PostgresService implements IPostgresService {
 
   public async deleteUserById(userId: UUID): Promise<any> {
     try {
-      const result = await this.prisma.userAccount.delete({
+      const result = await this.prisma.user_account.delete({
         where: {
           id: userId,
         },
@@ -81,7 +81,7 @@ export class PostgresService implements IPostgresService {
       });
 
       if (!tokenRecord) {
-        return ServiceResponse.failure("Token not found");
+        return ServiceResponse.failure("token not found");
       }
       return ServiceResponse.success(tokenRecord);
     } catch (error) {
@@ -96,7 +96,7 @@ export class PostgresService implements IPostgresService {
     try {
       const result = await this.prisma.token.deleteMany({
         where: {
-          userId: userId,
+          user_id: userId,
           type: tokenType,
         },
       });
@@ -123,7 +123,7 @@ export class PostgresService implements IPostgresService {
     try {
       const result = await this.prisma.token.deleteMany({
         where: {
-          userId: userId,
+          user_id: userId,
         },
       });
       return ServiceResponse.success(result);
@@ -132,18 +132,30 @@ export class PostgresService implements IPostgresService {
     }
   }
 
-  public async createProject(orgId: UUID, projectName: string): Promise<any> {
+  public async createProject(
+    orgId: UUID,
+    projectName: string,
+    userId: UUID
+  ): Promise<any> {
     try {
-      const project = await this.prisma.project.create({
-        data: {
-          id: uuid(),
-          orgId,
-          name: projectName,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
+      await this.prisma.$transaction(async (txn) => {
+        const project = await txn.project.create({
+          data: {
+            id: uuid(),
+            org_id: orgId,
+            name: projectName,
+            created_at: new Date(),
+            updated_at: new Date(),
+          },
+        });
+        await txn.user_project_mapping.create({
+          data: {
+            project_id: project.id,
+            user_id: userId,
+          },
+        });
+        return ServiceResponse.success(project);
       });
-      return ServiceResponse.success(project);
     } catch (error) {
       return ServiceResponse.failure(error);
     }
@@ -168,8 +180,8 @@ export class PostgresService implements IPostgresService {
         data: {
           id: uuid(),
           name: orgName,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
         },
       });
       return ServiceResponse.success(organization);
@@ -209,13 +221,13 @@ export class PostgresService implements IPostgresService {
     hashedPassword: string
   ): Promise<any> {
     try {
-      const user = await this.prisma.userAccount.create({
+      const user = await this.prisma.user_account.create({
         data: {
           id: uuid(),
           email,
           password: hashedPassword,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
           role: "admin",
         },
       });
@@ -235,14 +247,14 @@ export class PostgresService implements IPostgresService {
       const createdToken = await this.prisma.token.create({
         data: {
           id: uuid(),
-          userId,
+          user_id: userId,
           token,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
           type,
           fingerprint: null,
-          expiresAt,
-          isValid: true,
+          expires_at: expiresAt,
+          is_valid: true,
         },
       });
       return ServiceResponse.success(createdToken);

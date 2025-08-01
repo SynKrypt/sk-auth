@@ -15,6 +15,8 @@ interface IProjectModule {
   createNewProject: (req: Request, res: Response) => Promise<void>;
   deleteProject: (req: Request, res: Response) => Promise<void>;
   deleteOrganization: (req: Request, res: Response) => Promise<void>;
+  getOrganization: (req: Request, res: Response) => Promise<void>;
+  getProject: (req: Request, res: Response) => Promise<void>;
 }
 
 class ProjectModule implements IProjectModule {
@@ -23,6 +25,55 @@ class ProjectModule implements IProjectModule {
   constructor() {
     this.projectService = new ProjectService();
   }
+
+  public getOrganization = asyncHandler(async (req: Request, res: Response) => {
+    const { orgId } = req.body;
+    // validations
+    const validationResult = organization_deletion_schema.safeParse({
+      orgId,
+    });
+    if (!validationResult.success) {
+      throw new CustomError(
+        ErrorType.validation_error,
+        400,
+        "validation error",
+        validationResult.error.errors
+      );
+    }
+
+    // check if the organization exists
+    const organizationExists =
+      await this.projectService.getOrganizationById(orgId);
+    if (!organizationExists.success) {
+      throw new CustomError(
+        ErrorType.validation_error,
+        400,
+        "organization does not exist"
+      );
+    }
+
+    // get organization data, its related projects, users and number of associated keys
+    const organizationData =
+      await this.projectService.getOrganizationData(orgId);
+    if (!organizationData.success) {
+      throw new CustomError(
+        ErrorType.database_error,
+        500,
+        "organization data fetching failed",
+        organizationData.error
+      );
+    }
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          200,
+          "organization fetched successfully",
+          organizationData.data
+        )
+      );
+  });
 
   public createNewOrganization = asyncHandler(
     async (req: Request, res: Response) => {
@@ -127,6 +178,52 @@ class ProjectModule implements IProjectModule {
     }
   );
 
+  public getProject = asyncHandler(async (req: Request, res: Response) => {
+    const { projectId } = req.body;
+    // validations
+    const validationResult = project_deletion_schema.safeParse({
+      projectId,
+    });
+    if (!validationResult.success) {
+      throw new CustomError(
+        ErrorType.validation_error,
+        400,
+        "validation error",
+        validationResult.error.errors
+      );
+    }
+
+    // check if the project exists
+    const projectExists = await this.projectService.getProjectById(projectId);
+    if (!projectExists.success) {
+      throw new CustomError(
+        ErrorType.validation_error,
+        400,
+        "project does not exist"
+      );
+    }
+
+    const projectData = await this.projectService.getProjectData(projectId);
+    if (!projectData.success) {
+      throw new CustomError(
+        ErrorType.database_error,
+        500,
+        "project data fetching failed",
+        projectData.error
+      );
+    }
+
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          200,
+          "project fetched successfully",
+          projectData.data
+        )
+      );
+  });
+
   public createNewProject = asyncHandler(
     async (req: Request, res: Response) => {
       const { orgId, projectName } = req.body;
@@ -160,7 +257,8 @@ class ProjectModule implements IProjectModule {
       // create a new project
       const result = await this.projectService.createProject(
         orgId,
-        projectName
+        projectName,
+        req.user.id
       );
       if (!result.success) {
         throw new CustomError(

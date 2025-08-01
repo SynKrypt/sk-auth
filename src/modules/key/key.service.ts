@@ -77,7 +77,7 @@ export class KeyService implements IKeyService {
       const decodedToken = verify(token, config.jwt.JWT_SECRET);
       const tokenRecord = await this.dbService.getTokenByValue(token);
       if (!tokenRecord.success || !tokenRecord.data) {
-        return ServiceResponse.failure("Token not found");
+        return ServiceResponse.failure("token not found");
       }
       // check the validity of the token
       if (
