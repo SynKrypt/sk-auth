@@ -15,7 +15,7 @@ router.delete("/web/admin/account", authenticate, userModule.deleteAccount);
 // User routes (created by admin on web UI)
 router.post("/web/non-admin", authenticate, userModule.createNewUser);
 // router.delete("/web/user/:userId", authenticate, userModule.deleteUser);
-// router.get("/web/user", authenticate, userModule.getUsers);
+router.get("/web/user", authenticate, userModule.getAllUsers);
 // router.get("/web/user/:userId", authenticate, userModule.getUser);
 // router.put("/web/user/:userId", authenticate, userModule.updateUser);
 

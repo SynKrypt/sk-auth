@@ -13,6 +13,7 @@ import {
 } from "./user.validation.ts";
 import { PostgresService } from "../db/db.service.ts";
 import envConfig from "@/config/env-config.ts";
+import { UUID } from "crypto";
 
 export type ICookieType = {
   httpOnly: boolean;
@@ -297,6 +298,25 @@ class UserModule implements IUserModule {
     res
       .status(201)
       .json(ApiResponse.success(201, "User created successfully", null));
+  });
+
+  public getAllUsers = asyncHandler(async (req: Request, res: Response) => {
+    const { projectId } = req.body;
+    if (!projectId) {
+      throw new CustomError(ErrorType.not_found, 400, "project id is required");
+    }
+    const users = await this.userService.getAllUsersByProjectId(projectId);
+    if (!users.success) {
+      throw new CustomError(
+        ErrorType.database_error,
+        503,
+        "users fetch failed",
+        users.error
+      );
+    }
+    res
+      .status(200)
+      .json(ApiResponse.success(200, "Users fetched successfully", users.data));
   });
 }
 

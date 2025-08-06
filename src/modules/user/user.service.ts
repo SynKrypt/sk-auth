@@ -206,6 +206,28 @@ export class UserService implements IUserService {
     }
   }
 
+  public async getAllUsersByProjectId(projectId: UUID): Promise<any> {
+    try {
+      const users = await this.dbService.prisma.$queryRaw`
+      SELECT 
+        id,
+        email,
+        role,
+        org_id,
+        created_at,
+        updated_at
+      FROM user_account
+      WHERE id IN (
+        SELECT user_id FROM user_project_mapping
+        WHERE project_id = ${projectId}::uuid
+      )
+      `;
+      return ServiceResponse.success(users);
+    } catch (error: any) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
   private async generateAccessToken(payload: any): Promise<string> {
     const token = await jwt.sign(payload, config.jwt.JWT_SECRET, {
       expiresIn: "1d",
