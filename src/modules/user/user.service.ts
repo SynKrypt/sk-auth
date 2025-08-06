@@ -4,12 +4,19 @@ import config from "@/config/env-config.ts";
 import jwt from "jsonwebtoken";
 import ServiceResponse from "../response/service-response.ts";
 import { UUID } from "crypto";
+import { v4 } from "uuid";
 
 export interface IUserService {
   findUserByEmail(email: string): Promise<any>;
   createNewAdmin(email: string, password: string): Promise<any>;
   findUserById(id: UUID): Promise<any>;
   deleteUser(id: UUID): Promise<any>;
+  createNonAdminUser(
+    email: string,
+    role: string,
+    projectId: string,
+    orgId: string
+  ): Promise<any>;
 }
 
 export class UserService implements IUserService {
@@ -81,6 +88,42 @@ export class UserService implements IUserService {
     }
   }
 
+  public async createNonAdminUser(
+    email: string,
+    role: string,
+    projectId: string,
+    orgId: string
+  ): Promise<any> {
+    try {
+      await this.dbService.prisma.$transaction(async (txn) => {
+        // create user entry
+        const userCreationResponse: any = await txn.user_account.create({
+          data: {
+            id: v4(),
+            email,
+            role,
+            org_id: orgId,
+          },
+        });
+
+        // create mapping in user_project_mapping
+        await txn.user_project_mapping.create({
+          data: {
+            user_id: userCreationResponse.id,
+            project_id: projectId,
+          },
+        });
+
+        // Send user response with access token
+        return ServiceResponse.success({
+          user: userCreationResponse,
+        });
+      });
+    } catch (error: any) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
   public async loginUser(
     email: string,
     password: string,
@@ -147,7 +190,7 @@ export class UserService implements IUserService {
         */
         await txn.token.deleteMany({
           where: {
-            userId: userId,
+            user_id: userId,
           },
         });
         // delete the user

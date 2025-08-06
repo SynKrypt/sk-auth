@@ -9,6 +9,7 @@ import {
   loginSchema,
   email_schema,
   password_schema,
+  userCreationSchema,
 } from "./user.validation.ts";
 import { PostgresService } from "../db/db.service.ts";
 import envConfig from "@/config/env-config.ts";
@@ -28,6 +29,7 @@ const cookieOptions: ICookieType = {
 
 export interface IUserModule {
   registerWeb(req: Request, res: Response): Promise<any>;
+  createNewUser(req: Request, res: Response): Promise<any>;
 }
 
 class UserModule implements IUserModule {
@@ -234,6 +236,67 @@ class UserModule implements IUserModule {
     res
       .status(200)
       .json(ApiResponse.success(200, "User deleted successfully", null));
+  });
+
+  public createNewUser = asyncHandler(async (req: Request, res: Response) => {
+    const { projectId, orgId, name, email, role } = req.body;
+
+    // validations
+    const validationResult = userCreationSchema.safeParse({
+      projectId,
+      orgId,
+      name,
+      email,
+      role,
+    });
+    if (!validationResult.success) {
+      throw new CustomError(
+        ErrorType.validation_error,
+        400,
+        "validation error",
+        validationResult.error.errors
+      );
+    }
+
+    // Check if user already exists
+    const userFromDB = await this.userService.findUserByEmail(email);
+    if (userFromDB.success && userFromDB.data) {
+      throw new CustomError(
+        ErrorType.database_error,
+        409,
+        "user with this email already exists"
+      );
+    }
+
+    // Create new user
+    const user = await this.userService.createNonAdminUser(
+      email,
+      role,
+      projectId,
+      orgId
+    );
+    if (!user.success) {
+      throw new CustomError(
+        ErrorType.database_error,
+        503,
+        "user creation failed",
+        user.error
+      );
+    }
+
+    // Pseudocode for sending confirmation email (TODO):
+    /*
+    // Send confirmation email to the new user
+    await emailService.sendConfirmationEmail({
+      to: email,
+      subject: "Welcome to SynKrypt!",
+      body: `Hi ${name},\nYour account has been created. Please set your password using the following link: <link>`,
+    });
+    */
+
+    res
+      .status(201)
+      .json(ApiResponse.success(201, "User created successfully", null));
   });
 }
 

@@ -21,4 +21,18 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const userCreationSchema = z.object({
+  projectId: z.string().uuid("Invalid project ID"),
+  orgId: z.string().uuid("Invalid organization ID"),
+  name: z
+    .string()
+    .min(2, "Name must be at least 2 characters long")
+    .max(100, "Name must be at most 100 characters long")
+    .regex(/^[a-zA-Z ]+$/, "Name must contain only letters and spaces"),
+  email: email_schema,
+  role: z.enum(["admin", "viewer", "maintainer"], { message: "Invalid role" }),
+});
+
+export type UserCreationInput = z.infer<typeof userCreationSchema>;
+
 export type LoginInput = z.infer<typeof loginSchema>;

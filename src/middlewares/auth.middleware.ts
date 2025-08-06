@@ -42,6 +42,7 @@ export const authenticate = asyncHandler(
           "Authentication required. No access token found."
         );
       }
+      console.log("token", token);
 
       // Verify JWT token
       let decoded: JwtPayload;
@@ -54,9 +55,11 @@ export const authenticate = asyncHandler(
           "Invalid or expired token"
         );
       }
+      console.log("decoded", decoded);
 
       // Check if token exists and is valid in the database
       const tokenResponse = await dbService.getTokenByValue(token);
+      console.log("tokenResponse", tokenResponse);
       if (!tokenResponse.success || !tokenResponse.data) {
         throw new CustomError(
           ErrorType.invalid_token,
@@ -67,9 +70,12 @@ export const authenticate = asyncHandler(
 
       const tokenRecord = tokenResponse.data;
       if (
-        !tokenRecord.isValid ||
-        (tokenRecord.expiresAt && new Date() > new Date(tokenRecord.expiresAt))
+        !tokenRecord.is_valid ||
+        (tokenRecord.expires_at &&
+          new Date() > new Date(tokenRecord.expires_at))
       ) {
+        console.log("expires at ", tokenRecord.expires_at);
+        console.log("is valid ", tokenRecord.is_valid);
         throw new CustomError(
           ErrorType.token_expired,
           401,

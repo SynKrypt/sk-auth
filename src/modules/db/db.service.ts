@@ -79,6 +79,7 @@ export class PostgresService implements IPostgresService {
           token: token,
         },
       });
+      console.log("tokenRecord", tokenRecord);
 
       if (!tokenRecord) {
         return ServiceResponse.failure("token not found");
