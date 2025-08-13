@@ -12,7 +12,7 @@ export default class ApiResponse {
     error_type: ErrorType,
     status_code: number,
     message: string,
-    errors?: any
+    errors?: any,
   ) {
     return {
       success: false,
@@ -35,6 +35,7 @@ export enum ErrorType {
   invalid_token = "invalid_token",
   token_expired = "token_expired",
   internal_server_error = "internal_server_error",
+  bad_request = "bad_request",
 }
 
 export class CustomError extends Error {
@@ -46,7 +47,7 @@ export class CustomError extends Error {
     error_type: ErrorType,
     status_code: number,
     message: string,
-    errors?: any
+    errors?: any,
   ) {
     super(message);
     this.error_type = error_type;

@@ -11,18 +11,18 @@ model project {
   id           String       @id @default(uuid()) @db.Uuid
   org_id       String       @db.Uuid
   name         String       @unique
-  created_at    DateTime     @default(now()) @db.Timestamp(6)
-  updated_at    DateTime     @default(now()) @db.Timestamp(6)
+  created_at   DateTime     @default(now()) @db.Timestamp(6)
+  updated_at   DateTime     @default(now()) @db.Timestamp(6)
   organization organization @relation(fields: [org_id], references: [id])
 }
 
 model organization {
-  id           String        @id @default(uuid()) @db.Uuid
-  name         String        @unique
-  created_at    DateTime      @default(now()) @db.Timestamp(6)
-  updated_at    DateTime      @default(now()) @db.Timestamp(6)
-  projects     project[]
-  tokens       token[]
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String         @unique
+  created_at    DateTime       @default(now()) @db.Timestamp(6)
+  updated_at    DateTime       @default(now()) @db.Timestamp(6)
+  projects      project[]
+  tokens        token[]
   user_accounts user_account[]
 }
 
@@ -31,32 +31,44 @@ model user_account {
   email        String        @unique
   password     String?
   role         String
-  created_at    DateTime      @default(now()) @db.Timestamp(6)
-  updated_at    DateTime      @default(now()) @db.Timestamp(6)
-  org_id        String?       @db.Uuid
+  created_at   DateTime      @default(now()) @db.Timestamp(6)
+  updated_at   DateTime      @default(now()) @db.Timestamp(6)
+  org_id       String?       @db.Uuid
   tokens       token[]
   organization organization? @relation(fields: [org_id], references: [id])
+  key          key[]
 }
 
 model token {
   id           String        @id @default(uuid()) @db.Uuid
-  user_id       String        @db.Uuid
+  user_id      String        @db.Uuid
   token        String
-  org_id        String?       @db.Uuid
+  org_id       String?       @db.Uuid
   type         String
   fingerprint  String?
-  is_valid      Boolean       @default(true)
-  expires_at    DateTime
-  created_at    DateTime      @default(now()) @db.Timestamp(6)
-  updated_at    DateTime      @default(now()) @db.Timestamp(6)
+  is_valid     Boolean       @default(true)
+  expires_at   DateTime
+  created_at   DateTime      @default(now()) @db.Timestamp(6)
+  updated_at   DateTime      @default(now()) @db.Timestamp(6)
   organization organization? @relation(fields: [org_id], references: [id])
-  user         user_account   @relation(fields: [user_id], references: [id])
+  user         user_account  @relation(fields: [user_id], references: [id])
 }
 
 model user_project_mapping {
-  id           String        @id @default(uuid()) @db.Uuid
-  user_id       String        @db.Uuid
-  project_id    String        @db.Uuid
-  created_at    DateTime      @default(now()) @db.Timestamp(6)
-  updated_at    DateTime      @default(now()) @db.Timestamp(6)
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  project_id String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+}
+
+model key {
+  id          String   @id @default(uuid()) @db.Uuid
+  user_id     String   @db.Uuid
+  key_val     String
+  fingerprint String   @unique
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+
+  user user_account @relation(fields: [user_id], references: [id])
 }

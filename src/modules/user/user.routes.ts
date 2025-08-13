@@ -17,7 +17,7 @@ router.post("/web/non-admin", authenticate, userModule.createNewUser);
 // router.delete("/web/user/:userId", authenticate, userModule.deleteUser);
 router.get("/web/user", authenticate, userModule.getAllUsers);
 // router.get("/web/user/:userId", authenticate, userModule.getUser);
-// router.put("/web/user/:userId", authenticate, userModule.updateUser);
+// router.put("/web/user/:userId", authenticate, userModule.updateUser); // assign a different role to the non-admin user
 
 // SynKrypt CLI
 router.post("/cli/login", () => {});
@@ -25,8 +25,5 @@ router.get("/cli/account/me", () => {});
 
 // Key verification
 router.post("/key/verify", () => {});
-
-// Assign Role
-router.post("/admin/assign-role", () => {});
 
 export default router;

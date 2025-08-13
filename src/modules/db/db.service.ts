@@ -92,7 +92,7 @@ export class PostgresService implements IPostgresService {
 
   public async deleteUserTokensByType(
     userId: UUID,
-    tokenType: string
+    tokenType: string,
   ): Promise<any> {
     try {
       const result = await this.prisma.token.deleteMany({
@@ -136,7 +136,7 @@ export class PostgresService implements IPostgresService {
   public async createProject(
     orgId: UUID,
     projectName: string,
-    userId: UUID
+    userId: UUID,
   ): Promise<any> {
     try {
       await this.prisma.$transaction(async (txn) => {
@@ -219,7 +219,7 @@ export class PostgresService implements IPostgresService {
 
   public async createUserByEmailAndPassword(
     email: string,
-    hashedPassword: string
+    hashedPassword: string,
   ): Promise<any> {
     try {
       const user = await this.prisma.user_account.create({
@@ -242,7 +242,7 @@ export class PostgresService implements IPostgresService {
     userId: UUID,
     token: string,
     type: string,
-    expiresAt: Date
+    expiresAt: Date,
   ): Promise<any> {
     try {
       const createdToken = await this.prisma.token.create({
@@ -260,6 +260,21 @@ export class PostgresService implements IPostgresService {
       });
       return ServiceResponse.success(createdToken);
     } catch (error) {
+      return ServiceResponse.failure(error);
+    }
+  }
+
+  public async getPubKeyByFingerprint(fingerprint: string): Promise<any> {
+    try {
+      const response: any = await this.prisma.key.findUnique({
+        where: {
+          fingerprint,
+        },
+      });
+      return ServiceResponse.success({
+        user_id: response.user_id,
+      });
+    } catch (error: any) {
       return ServiceResponse.failure(error);
     }
   }
