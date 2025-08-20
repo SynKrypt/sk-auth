@@ -27,6 +27,7 @@
   "homepage": "https://github.com/SynKrypt/sk-auth#readme",
   "dependencies": {
     "@prisma/client": "^6.11.1",
+    "@types/axios": "^0.9.36",
     "@types/bcrypt": "^5.0.2",
     "@types/cookie-parser": "^1.4.9",
     "@types/jsonwebtoken": "^9.0.10",

@@ -13,3 +13,9 @@ dist/
 
 # Task
 tasks.md
+
+# Temporary Scripts
+temp/
+
+# Keys
+*.pem

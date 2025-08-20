@@ -24,7 +24,7 @@ class CLIModule implements ICLIModule {
 
   public requestNonce = asyncHandler(async (req: Request, res: Response) => {
     // get the public key fingerprint from the request body
-    const pubKeyFingerprint = req.body.fingerprint;
+    const pubKeyFingerprint = req.body?.fingerprint;
     if (!pubKeyFingerprint) {
       throw new CustomError(
         ErrorType.bad_request,
@@ -73,7 +73,99 @@ class CLIModule implements ICLIModule {
     );
   });
 
-  public login = asyncHandler(async (req: Request, res: Response) => {});
+  public login = asyncHandler(async (req: Request, res: Response) => {
+    // get the signed payload and the nonce from request body
+    const { nonce: _nonce, signedPayload, signature } = req.body;
+    if (!_nonce || !signedPayload || !signature) {
+      throw new CustomError(
+        ErrorType.bad_request,
+        400,
+        "Missing nonce, signed payload, or signature",
+      );
+    }
+
+    const nonce = String(_nonce);
+
+    // check the validity of the nonce record
+    const nonceValidityResponse = await this.cliService.isNonceValid(nonce);
+    if (!nonceValidityResponse.success) {
+      throw new CustomError(
+        ErrorType.bad_request,
+        401,
+        "Invalid nonce",
+        nonceValidityResponse.error,
+      );
+    }
+
+    // verify the signature of the signed payload using the public key
+    const getPublicKeyResponse = await this.cliService.getPublicKeyFromUserId(
+      nonceValidityResponse.data.userId,
+    );
+    if (!getPublicKeyResponse.success) {
+      throw new CustomError(
+        ErrorType.bad_request,
+        404,
+        "Public key not found",
+        getPublicKeyResponse.error,
+      );
+    }
+    const publicKey = getPublicKeyResponse.data.publicKey?.key_val;
+    const verifySignatureResponse = await this.cliService.verifySignature(
+      signedPayload,
+      signature,
+      publicKey,
+    );
+    if (!verifySignatureResponse.success) {
+      throw new CustomError(
+        ErrorType.bad_request,
+        404,
+        "Signature verification failed",
+        verifySignatureResponse.error,
+      );
+    }
+
+    console.log("pass-1");
+    console.log("verifySignatureResponse.data", verifySignatureResponse.data);
+    console.log("nonceValidityResponse.data", nonceValidityResponse.data);
+
+    // invalidate the nonce record (so that it cannot be used again)
+    const invalidateNonceResponse = await this.cliService.invalidateNonce(
+      nonceValidityResponse.data?.nonceId,
+    );
+    if (!invalidateNonceResponse.success) {
+      throw new CustomError(
+        ErrorType.bad_request,
+        500,
+        "Nonce invalidation failed",
+        invalidateNonceResponse.error,
+      );
+    }
+
+    // create a new session token (of type "cli-session") for the user (valid forever until revoked)
+    const createSessionResponse = await this.cliService.createSession(
+      nonceValidityResponse.data?.userId,
+      "cli-session",
+    );
+    if (!createSessionResponse.success) {
+      throw new CustomError(
+        ErrorType.bad_request,
+        500,
+        "Session creation failed",
+        createSessionResponse.error,
+      );
+    }
+
+    // send the session token to the client
+    res
+      .status(200)
+      .json(
+        ApiResponse.success(
+          200,
+          "CLI Login Successful",
+          createSessionResponse.data?.token,
+        ),
+      );
+  });
 
   public logout = asyncHandler(async (req: Request, res: Response) => {});
 }

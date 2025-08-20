@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { sign, verify } from "jsonwebtoken";
 import { PostgresService } from "../db/db.service.js";
-import { CustomError, ErrorType } from "../response/api-response.js";
+// import { CustomError, ErrorType } from "../response/api-response.js";
 import config from "../../config/env-config.js";
 import { UUID } from "crypto";
 import ServiceResponse from "../response/service-response.ts";
@@ -10,7 +10,7 @@ export interface IKeyService {
   createToken(
     role: string,
     email: string,
-    userId: UUID
+    userId: UUID,
   ): Promise<ServiceResponse>;
 }
 
@@ -40,7 +40,7 @@ export class KeyService implements IKeyService {
         {
           expiresIn: config.jwt.JWT_EXPIRES_IN,
           issuer: "sk-auth-service",
-        }
+        },
       );
 
       // Generate fingerprint
@@ -51,12 +51,12 @@ export class KeyService implements IKeyService {
       // Store the token in the database
       const result = await this.dbService.prisma.token.create({
         data: {
-          userId,
+          user_id: userId,
           token,
           type: "key-gen",
           fingerprint,
-          isValid: true,
-          expiresAt,
+          is_valid: true,
+          expires_at: expiresAt,
         },
         select: { id: true },
       });
