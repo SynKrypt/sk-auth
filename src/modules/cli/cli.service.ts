@@ -170,6 +170,18 @@ class CLIService implements ICLIService {
 
   public async createSession(userId: UUID, type: string): Promise<any> {
     try {
+      // check for any existing 'valid' session token for the user
+      const existingValidSessionToken =
+        await this.dbService.prisma.token.findFirst({
+          where: {
+            user_id: userId,
+            is_valid: true,
+            type,
+          },
+        });
+      if (existingValidSessionToken) {
+        return ServiceResponse.success(existingValidSessionToken);
+      }
       // create a session token using JWT
       const jwtPayload = {
         userId,

@@ -124,10 +124,6 @@ class CLIModule implements ICLIModule {
       );
     }
 
-    console.log("pass-1");
-    console.log("verifySignatureResponse.data", verifySignatureResponse.data);
-    console.log("nonceValidityResponse.data", nonceValidityResponse.data);
-
     // invalidate the nonce record (so that it cannot be used again)
     const invalidateNonceResponse = await this.cliService.invalidateNonce(
       nonceValidityResponse.data?.nonceId,
